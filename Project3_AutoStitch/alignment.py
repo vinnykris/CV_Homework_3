@@ -42,7 +42,24 @@ def computeHomography(f1, f2, matches, A_out=None):
         #Fill in the matrix A in this loop.
         #Access elements using square brackets. e.g. A[0,0]
         #TODO-BLOCK-BEGIN
-        raise Exception("TODO in alignment.py not implemented")
+        index1 = 2*(i+1) - 2
+        index2 = 2*(i+1) - 1
+
+        #Fill first row
+        A[index1, 0] = a_x
+        A[index1, 1] = a_y
+        A[index1, 2] = 1
+        A[index1, 6] = a_x * -1 * b_x
+        A[index1, 7] = a_y * -1 * b_x
+        A[index1, 8] = b_x * -1
+
+        A[index2, 3] = a_x
+        A[index2, 4] = a_y
+        A[index2, 5] = 1
+        A[index2, 6] = a_x * -1 * b_y
+        A[index2, 7] = a_y * -1 * b_y
+        A[index2, 8] = b_y * -1
+        # raise Exception("TODO in alignment.py not implemented")
         #TODO-BLOCK-END
         #END TODO
 
@@ -60,9 +77,11 @@ def computeHomography(f1, f2, matches, A_out=None):
     H = np.eye(3)
 
     #BEGIN TODO 3
+    H = Vt[-1,:].reshape(3, 3)
+
     #Fill the homography H with the appropriate elements of the SVD
     #TODO-BLOCK-BEGIN
-    raise Exception("TODO in alignment.py not implemented")
+    # raise Exception("TODO in alignment.py not implemented")
     #TODO-BLOCK-END
     #END TODO
 

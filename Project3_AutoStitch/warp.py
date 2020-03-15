@@ -2,6 +2,7 @@ import os
 import cv2
 import numpy as np
 
+
 def warpLocal(src, uv):
     '''
     Input:
@@ -17,11 +18,12 @@ def warpLocal(src, uv):
                   dimensions are (rows, cols, color bands BGR).
     '''
     width = src.shape[1]
-    height  = src.shape[0]
-    mask = cv2.inRange(uv[:,:,1],0,height-1.0)&cv2.inRange(uv[:,:,0],0,width-1.0)
-    warped = cv2.remap(src, uv[:, :, 0].astype(np.float32),\
-             uv[:, :, 1].astype(np.float32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
-    img2_fg = cv2.bitwise_and(warped,warped,mask = mask)
+    height = src.shape[0]
+    mask = cv2.inRange(uv[:, :, 1], 0, height -
+                       1.0) & cv2.inRange(uv[:, :, 0], 0, width-1.0)
+    warped = cv2.remap(src, uv[:, :, 0].astype(np.float32),
+                       uv[:, :, 1].astype(np.float32), cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
+    img2_fg = cv2.bitwise_and(warped, warped, mask=mask)
     return img2_fg
 
 
@@ -55,7 +57,7 @@ def computeSphericalWarpMappings(dstShape, f, k1, k2):
     # (x,y) is the spherical image coordinates.
     # (xf,yf) is the spherical coordinates, e.g., xf is the angle theta
     # and yf is the angle phi
-    one = np.ones((dstShape[0],dstShape[1]))
+    one = np.ones((dstShape[0], dstShape[1]))
     xf = one * np.arange(dstShape[1])
     yf = one.T * np.arange(dstShape[0])
     yf = yf.T
@@ -71,13 +73,34 @@ def computeSphericalWarpMappings(dstShape, f, k1, k2):
     # as output for your code. They should all have the shape
     # (img_height, img_width)
     # TODO-BLOCK-BEGIN
-    raise Exception("TODO in warp.py not implemented")
+
+    # Convert to spherical coordinates
+    x_hat = np.multiply(np.sin(xf), np.cos(yf))
+    y_hat = np.sin(yf)
+    z_hat = np.multiply(np.cos(xf), np.cos(yf))
+
+    # Project to normalized image coordinates
+    x_prime_n = np.divide(x_hat, z_hat)
+    y_prime_n = np.divide(y_hat, z_hat)
+
+    # Apply radial distortion
+    r2 = np.add(np.square(x_prime_n), np.square(y_prime_n))
+    radial_term_1 = np.multiply(k1, r2)
+    radial_term_2 = np.multiply(k2, np.square(r2))
+    term1 = np.add(1, radial_term_1)
+    term2 = np.add(term1, radial_term_2)
+    x_prime_d = np.multiply(x_prime_n, term2)
+    y_prime_d = np.multiply(y_prime_n, term2)
+
+    # Apply focal length to translate image center
+
+    # raise Exception("TODO in warp.py not implemented")
     # TODO-BLOCK-END
     # END TODO
     # Convert back to regular pixel coordinates
-    xn = 0.5 * dstShape[1] + xt * f
-    yn = 0.5 * dstShape[0] + yt * f
-    uvImg = np.dstack((xn,yn))
+    xn = 0.5 * dstShape[1] + x_prime_d * f
+    yn = 0.5 * dstShape[0] + y_prime_d * f
+    uvImg = np.dstack((xn, yn))
     return uvImg
 
 
@@ -98,10 +121,8 @@ def warpSpherical(image, focalLength, k1=-0.21, k2=0.26):
     # compute spherical warp
     # compute the addresses of each pixel of the output image in the
     # source image
-    uv = computeSphericalWarpMappings(np.array(image.shape), focalLength, k1, \
-        k2)
+    uv = computeSphericalWarpMappings(np.array(image.shape), focalLength, k1,
+                                      k2)
 
     # warp image based on backwards coordinates
     return warpLocal(image, uv)
-
-
