@@ -122,10 +122,11 @@ def alignPair(f1, f2, matches, m, nRANSAC, RANSACthresh):
     #This function should also call get_inliers and, at the end,
     #least_squares_fit.
     #TODO-BLOCK-BEGIN
+        
     s = 0
-    if m == 0: #eTranslation
+    if m == eTranslate: #eTranslation
         s = 1
-    elif m == 1: #eHomography
+    elif m == eHomography: #eHomography
         s = 4
     else:
         raise Exception ("Uh oh")
@@ -136,7 +137,7 @@ def alignPair(f1, f2, matches, m, nRANSAC, RANSACthresh):
     
     while iterations < nRANSAC:
         inlierSet = np.random.choice(matches,s,replace=False) #s random matches
-        if m == 0:
+        if m == eTranslate:
             m_p = np.eye(3)
             (a_x, a_y) = f1[inlierSet[0].queryIdx].pt
             (b_x, b_y) = f2[inlierSet[0].trainIdx].pt
@@ -144,7 +145,7 @@ def alignPair(f1, f2, matches, m, nRANSAC, RANSACthresh):
             m_p[1,2] = b_y - a_y
         else:
             m_p = computeHomography(f1,f2,inlierSet)
-        moreInliers = getInliers(f1,f2,matches,m_p,RANSACthresh)
+        moreInliers = getInliers(f1,f2,list(set(matches) - set(inlierSet)),m_p,RANSACthresh)
         if len(moreInliers) > mostInliers:
             mostInliers = len(moreInliers)
             bestSet = inlierSet
@@ -185,7 +186,15 @@ def getInliers(f1, f2, matches, M, RANSACthresh):
         #by M, is within RANSACthresh of its match in f2.
         #If so, append i to inliers
         #TODO-BLOCK-BEGIN
-        raise Exception("TODO in alignment.py not implemented")
+        m = matches[i]
+        (a_x, a_y) = f1[m.queryIdx].pt
+        a_x_transform = ((M[0,0]*a_x) + (M[0,1]*a_y) + M[0,2]) / ((M[2,0]*a_x) + (M[2,1]*a_y) + M[2,2])
+        a_y_transform = ((M[1,0]*a_x) + (M[1,1]*a_y) + M[1,2]) / ((M[2,0]*a_x) + (M[2,1]*a_y) + M[2,2])
+        (b_x, b_y) = f2[m.trainIdx].pt
+        from scipy.spatial import distance
+        d = distance.euclidean([a_x_transform,a_y_transform], [b_x,b_y])
+        if d <= RANSACthresh:
+            inlier_indices.append(m)
         #TODO-BLOCK-END
         #END TODO
 
