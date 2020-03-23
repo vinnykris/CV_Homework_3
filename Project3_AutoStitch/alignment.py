@@ -136,6 +136,7 @@ def alignPair(f1, f2, matches, m, nRANSAC, RANSACthresh):
     bestSet = []
     
     while iterations < nRANSAC:
+        iterations += 1
         inlierSet = np.random.choice(matches,s,replace=False) #s random matches
         if m == eTranslate:
             m_p = np.eye(3)
