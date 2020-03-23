@@ -134,6 +134,7 @@ def alignPair(f1, f2, matches, m, nRANSAC, RANSACthresh):
     iterations = 0
     mostInliers = 0
     bestSet = []
+    bestOtherInliers = []
     
     while iterations < nRANSAC:
         iterations += 1
