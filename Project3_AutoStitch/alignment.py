@@ -152,8 +152,7 @@ def alignPair(f1, f2, matches, m, nRANSAC, RANSACthresh):
             mostInliers = len(moreInliers)
             bestSet = inlierSet
             bestOtherInliers = moreInliers
-    
-    M = leastSquaresFit(f1,f2,bestSet,m,bestOtherInliers)
+    M = leastSquaresFit(f1,f2,matches,m,bestOtherInliers)
     #TODO-BLOCK-END
     #END TODO
     return M
@@ -196,10 +195,9 @@ def getInliers(f1, f2, matches, M, RANSACthresh):
         from scipy.spatial import distance
         d = distance.euclidean([a_x_transform,a_y_transform], [b_x,b_y])
         if d <= RANSACthresh:
-            inlier_indices.append(m)
+            inlier_indices.append(i)
         #TODO-BLOCK-END
         #END TODO
-
     return inlier_indices
 
 def leastSquaresFit(f1, f2, matches, m, inlier_indices):
@@ -226,7 +224,7 @@ def leastSquaresFit(f1, f2, matches, m, inlier_indices):
     # and full homographies (eHomography).
 
     M = np.eye(3)
-
+    
     if m == eTranslate:
         #For spherically warped images, the transformation is a
         #translation and only has two degrees of freedom.
@@ -241,7 +239,8 @@ def leastSquaresFit(f1, f2, matches, m, inlier_indices):
             #Use this loop to compute the average translation vector
             #over all inliers.
             #TODO-BLOCK-BEGIN
-            m = inlier_indices[i]
+            
+            m = matches[inlier_indices[i]]
             (a_x, a_y) = f1[m.queryIdx].pt
             (b_x, b_y) = f2[m.trainIdx].pt
             u += (b_x - a_x)
@@ -260,7 +259,8 @@ def leastSquaresFit(f1, f2, matches, m, inlier_indices):
         #Compute a homography M using all inliers.
         #This should call computeHomography.
         #TODO-BLOCK-BEGIN
-        M = computeHomography(f1, f2, inlier_indices)
+        newMatches = [matches[i] for i in inlier_indices]
+        M = computeHomography(f1, f2, newMatches)
         #TODO-BLOCK-END
         #END TODO
 
