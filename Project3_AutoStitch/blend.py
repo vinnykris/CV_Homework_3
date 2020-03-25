@@ -128,10 +128,15 @@ def getAccSize(ipv):
 
         # BEGIN TODO 9
         # add some code here to update minX, ..., maxY
-        #TODO-BLOCK-BEGIN
-        raise Exception("TODO in blend.py not implemented")
-        #TODO-BLOCK-END
-        # END TODO
+        minimum_x, minimum_y, maximum_x, maximum_y = imageBoundingBox(img, M)
+        if minimum_x < minX:
+            minX = minimum_x
+        if minimum_y < minY:
+            minY = minimum_y
+        if maximum_x > maxX:
+            maxX = maximum_x
+        if maximum_y > maxY:
+            maxY = maximum_y
 
     # Create an accumulator image
     accWidth = int(math.ceil(maxX) - math.floor(minX))
