@@ -29,7 +29,29 @@ def imageBoundingBox(img, M):
     """
     #TODO 8
     #TODO-BLOCK-BEGIN
-    raise Exception("TODO in blend.py not implemented")
+        
+    c_minX = 0
+    c_maxX = img.shape[0]-1
+    c_maxY = img.shape[1]-1
+    c_minY = 0
+    
+    bottomRightX = ((M[0,0]*c_minX) + (M[0,1]*c_maxY) + M[0,2]) / ((M[2,0]*c_minX) + (M[2,1]*c_maxY) + M[2,2])
+    bottomRightY = ((M[1,0]*c_minX) + (M[1,1]*c_maxY) + M[1,2]) / ((M[2,0]*c_minX) + (M[2,1]*c_maxY) + M[2,2])
+    
+    bottomLeftX = ((M[0,0]*c_minX) + (M[0,1]*c_minY) + M[0,2]) / ((M[2,0]*c_minX) + (M[2,1]*c_minY) + M[2,2])
+    bottomLeftY = ((M[1,0]*c_minX) + (M[1,1]*c_minY) + M[1,2]) / ((M[2,0]*c_minX) + (M[2,1]*c_minY) + M[2,2])
+    
+    topRightX = ((M[0,0]*c_maxX) + (M[0,1]*c_maxY) + M[0,2]) / ((M[2,0]*c_maxX) + (M[2,1]*c_maxY) + M[2,2])
+    topRightY = ((M[1,0]*c_maxX) + (M[1,1]*c_maxY) + M[1,2]) / ((M[2,0]*c_maxX) + (M[2,1]*c_maxY) + M[2,2])
+    
+    topLeftX =  ((M[0,0]*c_maxX) + (M[0,1]*c_minY) + M[0,2]) / ((M[2,0]*c_maxX) + (M[2,1]*c_minY) + M[2,2])
+    topLeftY = ((M[1,0]*c_maxX) + (M[1,1]*c_minY) + M[1,2]) / ((M[2,0]*c_maxX) + (M[2,1]*c_minY) + M[2,2])
+    
+    minX = min(bottomRightX,bottomLeftX,topRightX,topLeftX)
+    minY = min(bottomRightY,bottomLeftY,topRightY,topLeftY)
+    maxX = max(bottomRightX,bottomLeftX,topRightX,topLeftX)
+    maxY = max(bottomRightY,bottomLeftY,topRightY,topLeftY)
+        
     #TODO-BLOCK-END
     return int(minX), int(minY), int(maxX), int(maxY)
 
