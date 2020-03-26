@@ -108,7 +108,10 @@ def normalizeBlend(acc):
     # BEGIN TODO 11
     # fill in this routine..
     #TODO-BLOCK-BEGIN
-    raise Exception("TODO in blend.py not implemented")
+    acc = np.divide(acc,acc[:,:,3])
+    acc.replace(np.inf, 0, inplace=True)
+    acc.replace(np.nan, 0, inplace=True)
+    img = acc[:,:,:3]
     #TODO-BLOCK-END
     # END TODO
     return img
