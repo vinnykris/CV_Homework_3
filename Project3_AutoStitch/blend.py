@@ -135,7 +135,7 @@ def normalizeBlend(acc):
     acc[:, :, 3] = 1
 
 
-    return acc
+    return acc[:,:,:3]
 
 
 def getAccSize(ipv):
@@ -255,7 +255,7 @@ def blendImages(ipv, blendWidth, is360=False, A_out=None):
     acc = pasteImages(
         ipv, translation, blendWidth, accWidth, accHeight, channels
     )
-    compImage = normalizeBlend(acc)
+    compImage = normalizeBlend(acc).astype(np.uint8)
 
     # Determine the final image width
     outputWidth = (accWidth - width) if is360 else accWidth
@@ -270,14 +270,11 @@ def blendImages(ipv, blendWidth, is360=False, A_out=None):
     # Then handle the vertical drift
     # Note: warpPerspective does forward mapping which means A is an affine
     # transform that maps accumulator coordinates to final panorama coordinates
-    #TODO-BLOCK-BEGIN
     if is360:
         A = computeDrift(x_init, y_init, x_final, y_final, outputWidth)
-    #TODO-BLOCK-END
-    # END TODO
+
     if A_out is not None:
         A_out[:] = A
-
     # Warp and crop the composite
     croppedImage = cv2.warpPerspective(
         compImage, A, (outputWidth, accHeight), flags=cv2.INTER_LINEAR
