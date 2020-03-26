@@ -55,6 +55,10 @@ def imageBoundingBox(img, M):
     #TODO-BLOCK-END
     return int(minX), int(minY), int(maxX), int(maxY)
 
+def applyTransformation(x, y, M):
+    x_transformed = ((M[0,0]*x) + (M[0,1]*y) + M[0,2]) / ((M[2,0]*x) + (M[2,1]*y) + M[2,2])
+    y_transformed = ((M[1,0]*x) + (M[1,1]*y) + M[1,2]) / ((M[2,0]*x) + (M[2,1]*y) + M[2,2])
+    return x_transformed, y_transformed
 
 def accumulateBlend(img, acc, M, blendWidth):
     """
@@ -71,9 +75,26 @@ def accumulateBlend(img, acc, M, blendWidth):
     # BEGIN TODO 10
     # Fill in this routine
     #TODO-BLOCK-BEGIN
-    raise Exception("TODO in blend.py not implemented")
-    #TODO-BLOCK-END
-    # END TODO
+    minX, minY, maxX, maxY = imageBoundingBox(img, M)
+    warped_img = cv2.warpPerspective(img, M, (maxX - minX, maxY - minY))
+    inverse_homography = np.linalg.inv(M)
+
+    for x in range(warped_img.shape[0]):
+        for y in range(warped_img.shape[1]):
+            x_transformed, y_transformed = applyTransformation(x, y, inverse_homography)
+            if x_transformed < 0 or x_transformed > (img.shape[0] - 1):
+                continue
+            if y_transformed < 0 or y_transformed > (img.shape[1] - 1):
+                continue
+            # Left and Right side
+            if (y - minY) > blendWidth or (maxY - y) > blendWidth:
+                alpha = 1
+            elif (y - minY) < blendWidth:
+                alpha = float((y - minY)/blendWidth)
+            elif (maxY - y) < blendWidth:
+                alpha = float((maxY - y)/blendWidth)
+            
+            acc[x, y, :] += np.array((alpha*warped_img[x, y, 0], alpha*warped_img[x, y, 1], alpha*warped_img[x, y, 2]))
 
 
 def normalizeBlend(acc):
