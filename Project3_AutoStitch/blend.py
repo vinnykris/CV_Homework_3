@@ -94,7 +94,7 @@ def accumulateBlend(img, acc, M, blendWidth):
             elif (maxY - y) < blendWidth:
                 alpha = float((maxY - y)/blendWidth)
             
-            acc[x, y, :] += np.array((alpha*warped_img[x, y, 0], alpha*warped_img[x, y, 1], alpha*warped_img[x, y, 2]))
+            acc[x, y, :] += np.array((alpha*warped_img[x, y, 0], alpha*warped_img[x, y, 1], alpha*warped_img[x, y, 2], alpha))
 
 
 def normalizeBlend(acc):
@@ -108,13 +108,34 @@ def normalizeBlend(acc):
     # BEGIN TODO 11
     # fill in this routine..
     #TODO-BLOCK-BEGIN
-    acc = np.divide(acc,acc[:,:,3])
-    acc.replace(np.inf, 0, inplace=True)
-    acc.replace(np.nan, 0, inplace=True)
-    img = acc[:,:,:3]
-    #TODO-BLOCK-END
-    # END TODO
-    return img
+    # acc[:,:,0] = np.divide(acc[:,:,0], acc[:,:,3])
+    # acc[:,:,1] = np.divide(acc[:,:,1], acc[:,:,3])
+    # acc[:,:,2] = np.divide(acc[:,:,2], acc[:,:,3])
+    # acc[:,:,3] = np.divide(acc[:,:,3], acc[:,:,3])
+
+    # acc[:,:,0] = np.where(acc[:,:,0]==np.inf, 0, acc[:,:,0])
+    # acc[:,:,1] = np.where(acc[:,:,1]==np.inf, 0, acc[:,:,1])
+    # acc[:,:,2] = np.where(acc[:,:,2]==np.inf, 0, acc[:,:,2])
+    # acc[:,:,3] = np.where(acc[:,:,3]==np.inf, 1, acc[:,:,3])
+
+    # acc[:,:,0] = np.where(acc[:,:,0]==np.nan, 0, acc[:,:,0])
+    # acc[:,:,1] = np.where(acc[:,:,1]==np.nan, 0, acc[:,:,1])
+    # acc[:,:,2] = np.where(acc[:,:,2]==np.nan, 0, acc[:,:,2])
+    # acc[:,:,3] = np.where(acc[:,:,3]==np.nan, 1, acc[:,:,3])
+
+    for x in range(acc.shape[0]):
+        for y in range(acc.shape[1]):
+            if acc[x, y, 3] == 0:
+                acc[x, y, :] = 0
+                continue
+            acc[x, y, 0] = np.divide(acc[x,y,0], acc[x,y,3])
+            acc[x, y, 1] = np.divide(acc[x,y,1], acc[x,y,3])
+            acc[x, y, 2] = np.divide(acc[x,y,2], acc[x,y,3])
+    
+    acc[:, :, 3] = 1
+
+
+    return acc
 
 
 def getAccSize(ipv):
@@ -250,10 +271,10 @@ def blendImages(ipv, blendWidth, is360=False, A_out=None):
     # Note: warpPerspective does forward mapping which means A is an affine
     # transform that maps accumulator coordinates to final panorama coordinates
     #TODO-BLOCK-BEGIN
-    raise Exception("TODO in blend.py not implemented")
+    if is360:
+        A = computeDrift(x_init, y_init, x_final, y_final, outputWidth)
     #TODO-BLOCK-END
     # END TODO
-
     if A_out is not None:
         A_out[:] = A
 
