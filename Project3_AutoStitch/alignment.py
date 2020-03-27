@@ -42,8 +42,8 @@ def computeHomography(f1, f2, matches, A_out=None):
         #Fill in the matrix A in this loop.
         #Access elements using square brackets. e.g. A[0,0]
         #TODO-BLOCK-BEGIN
-        index1 = 2*(i+1) - 2
-        index2 = 2*(i+1) - 1
+        index1 = 2*i
+        index2 = (2*i) + 1
 
         #Fill first row
         A[index1, 0] = a_x
@@ -122,7 +122,7 @@ def alignPair(f1, f2, matches, m, nRANSAC, RANSACthresh):
     #This function should also call get_inliers and, at the end,
     #least_squares_fit.
     #TODO-BLOCK-BEGIN
-        
+       
     s = 0
     if m == eTranslate: #eTranslation
         s = 1
@@ -147,7 +147,7 @@ def alignPair(f1, f2, matches, m, nRANSAC, RANSACthresh):
             m_p[1,2] = b_y - a_y
         else:
             m_p = computeHomography(f1,f2,inlierSet)
-        moreInliers = getInliers(f1,f2,list(set(matches) - set(inlierSet)),m_p,RANSACthresh)
+        moreInliers = getInliers(f1,f2,matches,m_p,RANSACthresh)
         if len(moreInliers) > mostInliers:
             mostInliers = len(moreInliers)
             bestSet = inlierSet

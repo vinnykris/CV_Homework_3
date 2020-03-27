@@ -27,24 +27,22 @@ def imageBoundingBox(img, M):
          minX: int for the maximum X value of a corner
          minY: int for the maximum Y value of a corner
     """
-    #TODO 8
-    #TODO-BLOCK-BEGIN
-        
+
     c_minX = 0
-    c_maxX = img.shape[0]-1
-    c_maxY = img.shape[1]-1
+    c_maxX = img.shape[1]-1
+    c_maxY = img.shape[0]-1
     c_minY = 0
-    
+
     bottomRightX = ((M[0,0]*c_minX) + (M[0,1]*c_maxY) + M[0,2]) / ((M[2,0]*c_minX) + (M[2,1]*c_maxY) + M[2,2])
     bottomRightY = ((M[1,0]*c_minX) + (M[1,1]*c_maxY) + M[1,2]) / ((M[2,0]*c_minX) + (M[2,1]*c_maxY) + M[2,2])
-    
+
     bottomLeftX = ((M[0,0]*c_minX) + (M[0,1]*c_minY) + M[0,2]) / ((M[2,0]*c_minX) + (M[2,1]*c_minY) + M[2,2])
     bottomLeftY = ((M[1,0]*c_minX) + (M[1,1]*c_minY) + M[1,2]) / ((M[2,0]*c_minX) + (M[2,1]*c_minY) + M[2,2])
-    
+
     topRightX = ((M[0,0]*c_maxX) + (M[0,1]*c_maxY) + M[0,2]) / ((M[2,0]*c_maxX) + (M[2,1]*c_maxY) + M[2,2])
     topRightY = ((M[1,0]*c_maxX) + (M[1,1]*c_maxY) + M[1,2]) / ((M[2,0]*c_maxX) + (M[2,1]*c_maxY) + M[2,2])
     
-    topLeftX =  ((M[0,0]*c_maxX) + (M[0,1]*c_minY) + M[0,2]) / ((M[2,0]*c_maxX) + (M[2,1]*c_minY) + M[2,2])
+    topLeftX = ((M[0,0]*c_maxX) + (M[0,1]*c_minY) + M[0,2]) / ((M[2,0]*c_maxX) + (M[2,1]*c_minY) + M[2,2])
     topLeftY = ((M[1,0]*c_maxX) + (M[1,1]*c_minY) + M[1,2]) / ((M[2,0]*c_maxX) + (M[2,1]*c_minY) + M[2,2])
     
     minX = min(bottomRightX,bottomLeftX,topRightX,topLeftX)
@@ -58,7 +56,7 @@ def imageBoundingBox(img, M):
 def applyTransformation(x, y, M):
     x_transformed = ((M[0,0]*x) + (M[0,1]*y) + M[0,2]) / ((M[2,0]*x) + (M[2,1]*y) + M[2,2])
     y_transformed = ((M[1,0]*x) + (M[1,1]*y) + M[1,2]) / ((M[2,0]*x) + (M[2,1]*y) + M[2,2])
-    return x_transformed, y_transformed
+    return int(x_transformed), int(y_transformed)
 
 def accumulateBlend(img, acc, M, blendWidth):
     """
@@ -76,25 +74,28 @@ def accumulateBlend(img, acc, M, blendWidth):
     # Fill in this routine
     #TODO-BLOCK-BEGIN
     minX, minY, maxX, maxY = imageBoundingBox(img, M)
-    warped_img = cv2.warpPerspective(img, M, (maxX - minX, maxY - minY))
+
     inverse_homography = np.linalg.inv(M)
 
-    for x in range(warped_img.shape[0]):
-        for y in range(warped_img.shape[1]):
+    for x in range(minX, maxX):
+        for y in range(minY, maxY):
+            # a, b = 
             x_transformed, y_transformed = applyTransformation(x, y, inverse_homography)
-            if x_transformed < 0 or x_transformed > (img.shape[0] - 1):
+            if x_transformed < 0 or x_transformed > (img.shape[1] - 1):
                 continue
-            if y_transformed < 0 or y_transformed > (img.shape[1] - 1):
+            if y_transformed < 0 or y_transformed > (img.shape[0] - 1):
                 continue
             # Left and Right side
-            if (y - minY) > blendWidth or (maxY - y) > blendWidth:
+            if (x - minX) > blendWidth or (maxX - x) > blendWidth:
                 alpha = 1
-            elif (y - minY) < blendWidth:
-                alpha = float((y - minY)/blendWidth)
-            elif (maxY - y) < blendWidth:
-                alpha = float((maxY - y)/blendWidth)
+            elif (x - minX) < blendWidth:
+                alpha = float((x - minX)/blendWidth)
+            elif (maxX - x) < blendWidth:
+                alpha = float((maxX - x)/blendWidth)
             
-            acc[x, y, :] += np.array((alpha*warped_img[x, y, 0], alpha*warped_img[x, y, 1], alpha*warped_img[x, y, 2], alpha))
+            acc[y, x, :] += np.array((alpha*img[y_transformed, x_transformed, 0], 
+                alpha*img[y_transformed, x_transformed, 1], 
+                alpha*img[y_transformed, x_transformed, 2], alpha))
 
 
 def normalizeBlend(acc):
@@ -105,23 +106,6 @@ def normalizeBlend(acc):
        OUTPUT:
          img: image with r,g,b values of acc normalized
     """
-    # BEGIN TODO 11
-    # fill in this routine..
-    #TODO-BLOCK-BEGIN
-    # acc[:,:,0] = np.divide(acc[:,:,0], acc[:,:,3])
-    # acc[:,:,1] = np.divide(acc[:,:,1], acc[:,:,3])
-    # acc[:,:,2] = np.divide(acc[:,:,2], acc[:,:,3])
-    # acc[:,:,3] = np.divide(acc[:,:,3], acc[:,:,3])
-
-    # acc[:,:,0] = np.where(acc[:,:,0]==np.inf, 0, acc[:,:,0])
-    # acc[:,:,1] = np.where(acc[:,:,1]==np.inf, 0, acc[:,:,1])
-    # acc[:,:,2] = np.where(acc[:,:,2]==np.inf, 0, acc[:,:,2])
-    # acc[:,:,3] = np.where(acc[:,:,3]==np.inf, 1, acc[:,:,3])
-
-    # acc[:,:,0] = np.where(acc[:,:,0]==np.nan, 0, acc[:,:,0])
-    # acc[:,:,1] = np.where(acc[:,:,1]==np.nan, 0, acc[:,:,1])
-    # acc[:,:,2] = np.where(acc[:,:,2]==np.nan, 0, acc[:,:,2])
-    # acc[:,:,3] = np.where(acc[:,:,3]==np.nan, 1, acc[:,:,3])
 
     for x in range(acc.shape[0]):
         for y in range(acc.shape[1]):
@@ -186,7 +170,6 @@ def getAccSize(ipv):
     # Create an accumulator image
     accWidth = int(math.ceil(maxX) - math.floor(minX))
     accHeight = int(math.ceil(maxY) - math.floor(minY))
-    print('accWidth, accHeight:', (accWidth, accHeight))
     translation = np.array([[1, 0, -minX], [0, 1, -minY], [0, 0, 1]])
 
     return accWidth, accHeight, channels, width, translation
